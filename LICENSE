@@ -1,0 +1,48 @@
+# GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (C) 2024 SEICTL Contributors
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+## Additional Terms and Clarifications
+
+1. **Open Source Requirement**
+   - Any derivative work, modification, or implementation of this software or its components MUST be made publicly available under the same terms.
+   - The source code of any derivative work must be freely accessible and openly licensed.
+
+2. **Distribution Rights**
+   - You may use this software for any purpose, including commercial use.
+   - You may modify and distribute this software.
+   - You must make any modifications or improvements publicly available.
+
+3. **Attribution**
+   - Attribution to the original project is appreciated but not required.
+   - If you use this software, acknowledging the original project in your documentation would be welcomed.
+
+4. **Patent Use**
+   - This license provides an express grant of patent rights from contributors.
+   - Any patents related to this software must be licensed for everyone's free use.
+
+5. **No Warranty**
+   - This software is provided "as is", without warranty of any kind.
+   - The authors or copyright holders are not liable for any claims or damages.
+
+6. **Contributions**
+   - Contributions to this project inherit this same license.
+   - Contributors retain their copyright but grant everyone the same rights to use their contributions.
+
+## Exceptions
+
+No exceptions to the open source requirement are permitted. All derived works must remain open and freely available.
+
+## For More Information
+
+For the complete GNU General Public License text, see:
+https://www.gnu.org/licenses/gpl-3.0.html
+
+## Contact
+
+For questions about licensing, please open an issue in the project repository.
