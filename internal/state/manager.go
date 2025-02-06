@@ -166,14 +166,22 @@ func (m *Manager) backupValidatorState(snapshotDir string) error {
 
 func (m *Manager) createDataSnapshot(ctx context.Context, snapshotDir string, height int64) error {
 	dataDir := filepath.Join(m.config.Global.HomeDir, "data")
-	outFile := filepath.Join(snapshotDir, "data.tar.gz")
+	outFile := filepath.Join(snapshotDir, fmt.Sprintf("data_%d.tar.gz", height))
 
-	cmd := exec.CommandContext(ctx, "tar", "-czf", outFile, "-C", dataDir, ".")
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to create data snapshot: %w", err)
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		cmd := exec.CommandContext(ctx, "tar", "-czf", outFile, "-C", dataDir, ".")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to create data snapshot at height %d: %w", height, err)
+		}
+
+		return nil
 	}
-
-	return nil
 }
 
 func (m *Manager) createWasmSnapshot(ctx context.Context, snapshotDir string) error {
@@ -524,7 +532,7 @@ func copyDir(src, dst string) error {
 	return nil
 }
 
-func (m *Manager) setupStateSync(ctx context.Context, rpcEndpoint string, trustHeight int64, trustHash string) error {
+func (m *Manager) setupStateSync(_ context.Context, rpcEndpoint string, trustHeight int64, trustHash string) error {
 	m.logger.Info().
 		Str("rpc", rpcEndpoint).
 		Int64("height", trustHeight).
@@ -532,7 +540,6 @@ func (m *Manager) setupStateSync(ctx context.Context, rpcEndpoint string, trustH
 
 	configPath := filepath.Join(m.config.Global.HomeDir, "config", "config.toml")
 
-	// Read current config
 	content, err := os.ReadFile(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to read config: %w", err)

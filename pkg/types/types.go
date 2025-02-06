@@ -23,31 +23,43 @@ type Config struct {
 
 // GlobalConfig contains global settings
 type GlobalConfig struct {
-	HomeDir        string        `yaml:"home_dir"`
-	BackupDir      string        `yaml:"backup_dir"`
-	LogLevel       string        `yaml:"log_level"`
-	TimeoutSeconds int           `yaml:"timeout_seconds"` // Used to create time.Duration
-	MaxRetries     int           `yaml:"max_retries"`
-	RetryDelay     time.Duration `yaml:"retry_delay_seconds"`
+	HomeDir        string `yaml:"home_dir"`
+	BackupDir      string `yaml:"backup_dir"`
+	LogLevel       string `yaml:"log_level"`
+	TimeoutSeconds int    `yaml:"timeout_seconds"`
+	MaxRetries     int    `yaml:"max_retries"`
+	RetryDelay     string `yaml:"retry_delay_seconds"`
 }
 
-// GetTimeout returns the timeout as a time.Duration
+// GetRetryDelay returns the retry delay as time.Duration
+func (g GlobalConfig) GetRetryDelay() time.Duration {
+	d, err := time.ParseDuration(g.RetryDelay + "s")
+	if err != nil {
+		return 5 * time.Second // default to 5 seconds if parsing fails
+	}
+	return d
+}
+
+// GetTimeout returns the timeout as time.Duration
 func (g GlobalConfig) GetTimeout() time.Duration {
 	return time.Duration(g.TimeoutSeconds) * time.Second
 }
 
 // ChainConfig contains chain-specific configuration
 type ChainConfig struct {
-	ChainID           string           `yaml:"chain_id"`
-	Version           string           `yaml:"version"`
-	RPCEndpoints      []string         `yaml:"rpc_endpoints,omitempty"`
-	GenesisURL        string           `yaml:"genesis_url,omitempty"`
-	BinaryURL         string           `yaml:"binary_url,omitempty"`
-	BinaryChecksumURL string           `yaml:"binary_checksum_url,omitempty"`
-	StateSync         *StateSyncConfig `yaml:"state_sync,omitempty"`
-	Ports             *NodePorts       `yaml:"ports,omitempty"`
-	GenesisAccounts   []Account        `yaml:"genesis_accounts,omitempty"`
-	GenesisParams     GenesisParams    `yaml:"genesis_params,omitempty"`
+	ChainID           string   `yaml:"chain_id"`
+	Version           string   `yaml:"version"`
+	RPCEndpoints      []string `yaml:"rpc_endpoints,omitempty"`
+	GenesisURL        string   `yaml:"genesis_url,omitempty"`
+	BinaryURL         string   `yaml:"binary_url,omitempty"`
+	BinaryChecksumURL string   `yaml:"binary_checksum_url,omitempty"`
+	// Local development options
+	BinaryPath      string           `yaml:"binary_path,omitempty"`
+	BuildCommand    string           `yaml:"build_command,omitempty"`
+	StateSync       *StateSyncConfig `yaml:"state_sync,omitempty"`
+	Ports           *NodePorts       `yaml:"ports,omitempty"`
+	GenesisAccounts []Account        `yaml:"genesis_accounts,omitempty"`
+	GenesisParams   GenesisParams    `yaml:"genesis_params,omitempty"`
 }
 
 // StateSyncConfig contains state sync specific configuration

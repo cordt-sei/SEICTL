@@ -91,7 +91,10 @@ func newInitCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&env, "env", "", "environment (local, testnet, mainnet)")
 	cmd.Flags().BoolVar(&skipBinary, "skip-binary", false, "skip binary download/compilation")
-	cmd.MarkFlagRequired("env")
+
+	if err := cmd.MarkFlagRequired("env"); err != nil {
+		logger.Fatal().Err(err).Msg("Failed to mark env flag as required")
+	}
 
 	return cmd
 }
@@ -140,8 +143,13 @@ func newStateSyncCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&rpcEndpoint, "rpc", "", "RPC endpoint for state sync")
 	cmd.Flags().Int64Var(&trustHeight, "trust-height", 0, "trusted block height")
-	cmd.MarkFlagRequired("rpc")
-	cmd.MarkFlagRequired("trust-height")
+
+	if err := cmd.MarkFlagRequired("rpc"); err != nil {
+		logger.Fatal().Err(err).Msg("Failed to mark rpc flag as required")
+	}
+	if err := cmd.MarkFlagRequired("trust-height"); err != nil {
+		logger.Fatal().Err(err).Msg("Failed to mark trust-height flag as required")
+	}
 
 	return cmd
 }

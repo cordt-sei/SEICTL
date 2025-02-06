@@ -1,0 +1,120 @@
+version: "1.0"
+
+global:
+  home_dir: "~/.sei"
+  backup_dir: "~/sei_backup"
+  log_level: "INFO"
+  timeout_seconds: 30
+  max_retries: 3
+  retry_delay_seconds: "5"  # Now a string, will be parsed as seconds
+
+environments:
+  mainnet:
+    chain_id: "pacific-1"
+    version: "v5.9.0-hotfix"
+    rpc_endpoints:
+      - "https://rpc1.sei.io"
+      - "https://rpc2.sei.io"
+    genesis_url: "https://raw.githubusercontent.com/sei-protocol/chain-registry/main/pacific-1/genesis.json"
+    binary_url: "https://github.com/sei-protocol/sei-chain/releases/download/{version}/seid-{version}-linux-amd64"
+    binary_checksum_url: "https://github.com/sei-protocol/sei-chain/releases/download/{version}/seid-{version}-linux-amd64.sha256"
+    state_sync:
+      trust_height_delta: 2000
+      block_time_seconds: 6
+      snapshot_interval: 100000
+    ports:
+      rpc: 26657
+      p2p: 26656
+      api: 1317
+      grpc: 9090
+      grpc_web: 9091
+      pprof: 6060
+
+  testnet:
+    chain_id: "atlantic-2"
+    version: "v5.9.0-hotfix"
+    rpc_endpoints:
+      - "https://rpc1.atlantic-2.sei.io"
+      - "https://rpc2.atlantic-2.sei.io"
+    genesis_url: "https://raw.githubusercontent.com/sei-protocol/testnet/main/atlantic-2/genesis.json"
+    binary_url: "https://github.com/sei-protocol/sei-chain/releases/download/{version}/seid-{version}-linux-amd64"
+    binary_checksum_url: "https://github.com/sei-protocol/sei-chain/releases/download/{version}/seid-{version}-linux-amd64.sha256"
+    state_sync:
+      trust_height_delta: 2000
+      block_time_seconds: 6
+      snapshot_interval: 2000
+    ports:
+      rpc: 26657
+      p2p: 26656
+      api: 1317
+      grpc: 9090
+      grpc_web: 9091
+      pprof: 6060
+
+  local:
+    chain_id: "sei-local"
+    version: "latest"
+    genesis_accounts:
+      - name: "admin"
+        coins: ["100000000000000000000usei", "100000000000000000000uusdc", "100000000000000000000uatom"]
+    genesis_params:
+      voting_period: "30s"
+      expedited_voting_period: "10s"
+      deposit_period: "60s"
+      oracle_vote_period: "2"
+      community_tax: "0.000000000000000000"
+      block_max_gas: "35000000"
+      max_voting_power_ratio: "1.000000000000000000"
+    ports:
+      rpc: 26657
+      p2p: 26656
+      api: 1317
+      grpc: 9090
+      grpc_web: 9091
+      pprof: 6060
+
+node_configs:
+  app_toml:
+    minimum_gas_prices: "0.1usei"
+    pruning: "custom"
+    pruning-keep-recent: "100"
+    pruning-keep-every: "0"
+    pruning-interval: "10"
+    halt-height: "0"
+    api:
+      enable: true
+      address: "tcp://0.0.0.0:{ports.api}"
+    grpc:
+      enable: true
+      address: "0.0.0.0:{ports.grpc}"
+    grpc-web:
+      enable: true
+      address: "0.0.0.0:{ports.grpc_web}"
+
+  config_toml:
+    moniker: "seinode"
+    fast_sync: true
+    db_backend: "goleveldb"
+    db_dir: "data"
+    log_level: "info"
+    log_format: "plain"
+    genesis_file: "config/genesis.json"
+    priv_validator_key_file: "config/priv_validator_key.json"
+    priv_validator_state_file: "data/priv_validator_state.json"
+    rpc:
+      laddr: "tcp://0.0.0.0:{ports.rpc}"
+      cors_allowed_origins: ["*"]
+      max_open_connections: 1000
+    p2p:
+      laddr: "tcp://0.0.0.0:{ports.p2p}"
+      external_address: ""
+      seeds: ""
+      persistent_peers: ""
+      max_num_inbound_peers: 40
+      max_num_outbound_peers: 10
+    statesync:
+      enable: true
+      rpc_servers: ""
+      trust_height: 0
+      trust_hash: ""
+      trust_period: "168h0m0s"

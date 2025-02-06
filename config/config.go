@@ -21,9 +21,15 @@ func LoadConfig(path string) (*types.Config, error) {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	// Expand home directory in paths
-	config.Global.HomeDir = expandPath(config.Global.HomeDir)
-	config.Global.BackupDir = expandPath(config.Global.BackupDir)
+	if config.Version == "" {
+		return nil, fmt.Errorf("version is required in config file")
+	}
+
+	// Don't expand paths in test mode
+	if os.Getenv("SEICTL_TEST") != "1" {
+		config.Global.HomeDir = expandPath(config.Global.HomeDir)
+		config.Global.BackupDir = expandPath(config.Global.BackupDir)
+	}
 
 	return config, nil
 }

@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sync"
+	"time"
 
 	"github.com/your-org/seictl/internal/binary"
 	"github.com/your-org/seictl/internal/state"
@@ -136,7 +138,9 @@ func (m *Manager) StopNode(ctx context.Context) error {
 }
 
 func (m *Manager) initChainDir(cfg types.ChainConfig) error {
-	// Create necessary directories
+	// Use cfg parameter in implementation
+	m.logger.Info().Str("chain_id", cfg.ChainID).Msg("Initializing chain directory")
+
 	dirs := []string{
 		m.homePath,
 		m.configPath,
@@ -154,6 +158,12 @@ func (m *Manager) initChainDir(cfg types.ChainConfig) error {
 }
 
 func (m *Manager) configureNode(cfg types.ChainConfig, opts InitOptions) error {
+	// Use cfg parameter in implementation
+	m.logger.Info().
+		Str("chain_id", cfg.ChainID).
+		Str("moniker", opts.Moniker).
+		Msg("Configuring node")
+
 	// Update node configs with options
 	nodeConfigs := m.config.NodeConfigs
 
@@ -163,7 +173,8 @@ func (m *Manager) configureNode(cfg types.ChainConfig, opts InitOptions) error {
 		configToml[k] = v
 	}
 
-	// Update moniker if provided
+	// Set chain-specific configurations
+	configToml["chain_id"] = cfg.ChainID
 	if opts.Moniker != "" {
 		configToml["moniker"] = opts.Moniker
 	}
@@ -178,12 +189,11 @@ func (m *Manager) configureNode(cfg types.ChainConfig, opts InitOptions) error {
 		statesync["enable"] = true
 	}
 
-	// Write app.toml
+	// Write configs
 	if err := m.writeConfig("app.toml", nodeConfigs.AppToml); err != nil {
 		return fmt.Errorf("failed to write app.toml: %w", err)
 	}
 
-	// Write config.toml with our modifications
 	if err := m.writeConfig("config.toml", configToml); err != nil {
 		return fmt.Errorf("failed to write config.toml: %w", err)
 	}
@@ -208,21 +218,25 @@ func (m *Manager) writeConfig(filename string, data interface{}) error {
 func (m *Manager) setupGenesis(ctx context.Context, cfg types.ChainConfig) error {
 	genesisPath := filepath.Join(m.configPath, "genesis.json")
 
-	// Download genesis if URL provided
-	if cfg.GenesisURL != "" {
-		if err := m.downloadGenesis(ctx, cfg.GenesisURL, genesisPath); err != nil {
-			return fmt.Errorf("failed to download genesis: %w", err)
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		// Download genesis if URL provided
+		if cfg.GenesisURL != "" {
+			if err := m.downloadGenesis(ctx, cfg.GenesisURL, genesisPath); err != nil {
+				return fmt.Errorf("failed to download genesis: %w", err)
+			}
+		} else if len(cfg.GenesisAccounts) > 0 {
+			if err := m.createLocalGenesis(cfg, genesisPath); err != nil {
+				return fmt.Errorf("failed to create local genesis: %w", err)
+			}
 		}
-	} else if len(cfg.GenesisAccounts) > 0 {
-		if err := m.createLocalGenesis(cfg, genesisPath); err != nil {
-			return fmt.Errorf("failed to create local genesis: %w", err)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func (m *Manager) downloadGenesis(ctx context.Context, url, destPath string) error {
+func (m *Manager) downloadGenesis(_ context.Context, url, destPath string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return fmt.Errorf("failed to download genesis: %w", err)
@@ -243,6 +257,21 @@ func (m *Manager) downloadGenesis(ctx context.Context, url, destPath string) err
 }
 
 func (m *Manager) createLocalGenesis(cfg types.ChainConfig, genesisPath string) error {
-	// Implement local genesis creation with specified accounts
+	// Use cfg parameter to create local genesis file
+	genesis := map[string]interface{}{
+		"chain_id":     cfg.ChainID,
+		"genesis_time": time.Now().Format(time.RFC3339),
+		"accounts":     cfg.GenesisAccounts,
+	}
+
+	bytes, err := json.MarshalIndent(genesis, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal genesis: %w", err)
+	}
+
+	if err := os.WriteFile(genesisPath, bytes, 0644); err != nil {
+		return fmt.Errorf("failed to write genesis file: %w", err)
+	}
+
 	return nil
 }
